@@ -39,7 +39,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-
 class Lead(models.Model):
     leadName=models.CharField(max_length=100, unique=True)
     contact=models.CharField(max_length=100, unique=True)
