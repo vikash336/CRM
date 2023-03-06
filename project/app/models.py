@@ -1,5 +1,5 @@
 from django.db import models
-import datetime
+from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
@@ -21,20 +21,14 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
-    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(default=timezone.now)
 
-    objects = CustomUserManager()
-
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    class Meta:
-        verbose_name = 'user'
-        verbose_name_plural = 'users'
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.email
@@ -49,6 +43,17 @@ LeadStatus =(
 )
 
 
+class Industry(models.Model):
+    Industry=models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.Industry
+class Lead_status(models.Model):
+    status=models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.status
+
 
 class GenderAll(models.Model):
     type=models.CharField(max_length=128, unique=True)
@@ -62,33 +67,40 @@ class User_BD(models.Model):
         return self.Name
 
 
-# class Lead(models.Model):
-#     lead_id = models.CharField(max_length=255, primary_key=True)
+class Lead_Sourcer(models.Model):
+    name = models.CharField(max_length=255, primary_key=True)
+
+    def __str__(self):
+        return self.name
 
 class Lead(models.Model):
     leadName = models.CharField(max_length=100, unique=True)
+    Title=models.CharField(max_length=100)
     Contact = models.CharField(max_length=100)
     phone_no = PhoneNumberField()
-
     accountstatus = models.BooleanField(default=False)
-    leadstatus = models.CharField(
-        max_length=20,
-        choices=LeadStatus,
-        default='N/A'
-    )
-    leadsource = models.ForeignKey(User_BD, on_delete=models.CASCADE, related_name='Lead')
-
+    website=models.CharField(max_length=100,default='None')
+    skypeID=models.CharField(max_length=100 )
+    No_of_rescorce_deployed=models.PositiveIntegerField(default='0')
+    # leadstatus = models.CharField(
+    #     max_length=20,
+    #     choices=LeadStatus,
+    #     default='N/A'
+    # )
+    lead_Status=models.ForeignKey(Lead_status, on_delete=models.CASCADE, related_name='Lead_Status' )
+    lead_Sourcer = models.ForeignKey(User_BD, on_delete=models.CASCADE, related_name='Lead_UserBD')
+    lead_Source=models.ForeignKey(Lead_Sourcer, on_delete=models.CASCADE, related_name='Lead_sourcer')
+    Industry=models.ForeignKey(Industry, on_delete=models.CASCADE, related_name='Lead_Industry')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.leadName
+        return self.Title
 
 
 class Contact(models.Model):
-    lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
-    lead_id = models.CharField(max_length=255)
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='lead_contact' )
     contact_first_name = models.CharField(max_length=255)
     contact_last_name = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
@@ -96,8 +108,5 @@ class Contact(models.Model):
     email = models.EmailField(max_length=255)
     skype_id = models.CharField(max_length=255, null=True, blank=True)
 
-    def __str__(self) -> str:
-        return self.contact_first_name
-
-
-
+    def __str__(self):
+        return str(self.lead)
