@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -20,19 +20,59 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True)
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    date_joined = models.DateTimeField(default=timezone.now)
+    ROLE_CHOICES = [
+        ('USER', 'User'),
+        ('STAFF', 'Staff'),
+        ('ADMIN', 'Admin'),
+    ]
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=30, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(timezone.now)
+
+    role = models.CharField(max_length=5, choices=ROLE_CHOICES, default='USER')
 
     objects = CustomUserManager()
 
-    def __str__(self):
-        return self.email
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
 
+    class Meta:
+        verbose_name = 'user'
+        verbose_name_plural = 'users'
+
+    def __str__(self):
+        return self.first_name
+
+    def has_role(self, role):
+        return self.role == role
+
+    def has_permission(self, perm):
+        return self.user_permissions.filter(codename=perm).exists() or \
+            self.groups.filter(permissions__codename=perm).exists()
+
+    @property
+    def is_user(self):
+        return self.has_role('USER')
+
+    @property
+    def is_staff_lead(self):
+        return self.has_role('STAFF')
+
+    @property
+    def is_admin(self):
+        return self.has_role('ADMIN')
+
+class Record(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='records')
+
+    def __str__(self):
+        return self.name
 
 
 LeadStatus =(
@@ -62,6 +102,7 @@ class GenderAll(models.Model):
 class User_BD(models.Model):
     Gender=models.ForeignKey(GenderAll, on_delete=models.CASCADE)
     Name=models.CharField(max_length=100)
+    associateds=models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.Name
