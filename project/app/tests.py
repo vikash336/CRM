@@ -1,3 +1,5 @@
-from django.test import TestCase
+a={'email': 'user@example.com', 'first_name': 'Test', 'last_name': 'User', 'password': 'password123', 'password1': 'password123', 'role': 'USER'}
 
-# Create your tests here.
+a['password']='aslfdklskdflkds'
+
+print(a)
