@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import Lead_serializer , User_serializer
+from .serializers import Lead_serializer , User_serializer ,BD_serializer
 from rest_framework.decorators import APIView
 from .models import Lead , CustomUser
 from rest_framework.response import Response
@@ -19,6 +19,7 @@ class CR(APIView):
             return Response(
                 f2.data
             )
+        
         return Response(Lead_serializer.errors(), status=status.HTTP_400_BAD_REQUEST)
 
 class Regiter(APIView):
@@ -60,5 +61,28 @@ class Login(APIView):
             return response
 
 class Operations(APIView):
-    def post(self,request):
-        pass
+    def get(self,request):
+        f1=Lead.objects.all()
+        f2=Lead_serializer(f1,many=True)
+        return Response(
+            f2.data
+        )
+        # f1=Student.objects.get(id=id)
+        # f2=stu_Serializers(instance=f1 , data=request.data)
+        # f2.is_valid()
+        # f2.save()
+        # return Response(f2.data, status=status.HTTP_404_NOT_FOUND)
+
+    # def patch(self,request,id):
+    #     f1=Student.objects.get(id=id)
+    #     f=request.data
+    #     f2=stu_Serializers(instance=f1,data=f)
+    #     if f2.is_valid():
+    #         f2.save()
+    #         return Response(f2.data)
+
+    # def delete(self,request,id):
+    #     f1=get_object_or_404(Student , id=id)
+    #     f1.delete()
+    #     return Response('ITEM deleted sucessfully')
+

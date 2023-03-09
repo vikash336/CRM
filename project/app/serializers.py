@@ -13,3 +13,8 @@ class Lead_serializer(serializers.ModelSerializer):
         model=Lead
         fields=('__all__')
 
+
+class BD_serializer(serializers.ModelSerializer):
+    class Meta:
+        model=User_BD
+        fields=('__all__')
