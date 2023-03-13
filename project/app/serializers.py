@@ -15,6 +15,9 @@ class Lead_serializer(serializers.ModelSerializer):
 
 
 class BD_serializer(serializers.ModelSerializer):
+
+    # Gender=serializers.CharField(max_length=100)
+    # associateds=serializers.CharField(max_length=100)
     class Meta:
         model=User_BD
-        fields=('__all__')
+        fields=['Gender', 'Name', 'associateds']
