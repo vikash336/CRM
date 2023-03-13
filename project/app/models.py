@@ -94,6 +94,7 @@ class User_BD(models.Model):
     Name=models.CharField(max_length=100, primary_key=True)
     associateds=models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=None)
 
+
     def __str__(self):
         return self.Name
 

@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from .serializers import Lead_serializer , User_serializer ,BD_serializer
 from rest_framework.decorators import APIView
-from .models import Lead , CustomUser
+from .models import Lead , CustomUser,User_BD
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 import datetime
 import jwt
+import json
 from django.contrib.auth.hashers import make_password
 from project.settings import SECRET_KEY
 class CR(APIView):
@@ -67,22 +68,57 @@ class Operations(APIView):
         return Response(
             f2.data
         )
-        # f1=Student.objects.get(id=id)
-        # f2=stu_Serializers(instance=f1 , data=request.data)
-        # f2.is_valid()
-        # f2.save()
-        # return Response(f2.data, status=status.HTTP_404_NOT_FOUND)
 
-    # def patch(self,request,id):
-    #     f1=Student.objects.get(id=id)
-    #     f=request.data
-    #     f2=stu_Serializers(instance=f1,data=f)
-    #     if f2.is_valid():
-    #         f2.save()
-    #         return Response(f2.data)
 
-    # def delete(self,request,id):
-    #     f1=get_object_or_404(Student , id=id)
-    #     f1.delete()
-    #     return Response('ITEM deleted sucessfully')
+class BdTeam(APIView):
+    def patch(self,request,id):
+        global lead_sourcer_name
+        f1=Lead.objects.get(id=id)
+        f2=Lead_serializer(instance=f1,data=request.data)
+        if f2.is_valid():
+            lead_sourcer=f2.data
+            lead_sourcer_name=lead_sourcer['lead_Sourcer']
+            token = request.COOKIES.get('jwt')
+            if not token:
+                raise AuthenticationFailed('Unauthenticated')
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms='HS256')
+            except jwt.InvalidSignatureError:
+                raise AuthenticationFailed('unathenticated')
+            user = CustomUser.objects.filter(id=payload['id']).first()
+            serializer = User_serializer(user)
+            if serializer.data['role'] =='ADMIN':
+                f1=Lead.objects.get(id=id)
+                f2=Lead_serializer(instance=f1,data=request.data)
+                if f2.is_valid():
+                    f2.save()
+                    return Response({
+                        "Status":"Updation Complete"
+                    })
+            BD_Data=User_BD.objects.all()
+            BD_Data_serializer=BD_serializer(BD_Data,many=True)
 
+            od= json.dumps(BD_Data_serializer.data)
+            ob1=json.loads(od)
+            BD_assiociate_by_current_user=[]
+
+            for i in ob1:
+                if i['associateds']==serializer.data['id']:
+                    BD_assiociate_by_current_user.append(i['Name'])
+            if lead_sourcer_name in BD_assiociate_by_current_user:
+                f1=Lead.objects.get(id=id)
+                f2=Lead_serializer(instance=f1,data=request.data)
+                if f2.is_valid():
+                    f2.save()
+                    return Response(f2.data)
+
+            elif lead_sourcer_name not in BD_assiociate_by_current_user:
+                    return Response({
+                        "Status":"Logging User dose not have permission to do changes"
+                    }
+                    )
+        else:
+            return Response({
+                        "Status":"Logging User dose not have permission to do changes"
+                    }
+                    )
